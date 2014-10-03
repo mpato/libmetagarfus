@@ -1,0 +1,4 @@
+libmetagarfus
+=============
+
+Metagarfus utils lib
