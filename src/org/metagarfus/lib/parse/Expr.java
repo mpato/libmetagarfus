@@ -50,4 +50,9 @@ public class Expr
     }
     return false;
   }
+
+  public Expr parse(String str)
+  {
+    return null;
+  }
 }

@@ -65,7 +65,7 @@ public abstract class TagTuple
 
   private static boolean isString(String str)
   {
-    return str.length() >= 1 && str.charAt(0) == '"';
+    return str != null && str.length() >= 1 && str.charAt(0) == '"';
   }
 
   private static boolean isWhiteSpace(byte tchar)
@@ -81,65 +81,22 @@ public abstract class TagTuple
     BytesString remaining;
   }
 
-  private static class BytesString
-  {
-    byte[] data;
-    int start, end;
-
-    private BytesString()
-    {
-      this("");
-    }
-
-    private BytesString(byte[] data, int start, int end)
-    {
-      this.data = data;
-      this.start = start;
-      this.end = end;
-    }
-
-    BytesString(String data)
-    {
-      this(data.getBytes(), 0, 0);
-      end = this.data.length;
-    }
-
-    int length()
-    {
-      return end - start;
-    }
-
-    byte charAt(int i)
-    {
-      return data[start + i];
-    }
-
-    BytesString substring(int start, int end)
-    {
-      return new BytesString(data, this.start + start, this.start + end);
-    }
-
-    BytesString substring(int start)
-    {
-      return substring(start, length());
-    }
-
-    public String toString()
-    {
-      return new String(data).substring(start, end);
-    }
-  }
-
   private static void consumeString(BytesString source, Parsed tk)
   {
     boolean escaped;
     String ret;
     int j;
     byte tchar;
-    ret = "";
+    consumeWhiteSpace(0, source, tk);
+    if (tk.nextTChar != '"') {
+      tk.token = null;
+      return;
+    }
+    source = tk.remaining;
     j = 0;
     escaped = false;
-    for (int i = 1; i < source.length(); i++) {
+    ret = "\"";
+    for (int i = 0; i < source.length(); i++) {
       tchar = source.charAt(i);
       if (!escaped) {
         if (tchar == '"') {
@@ -165,15 +122,14 @@ public abstract class TagTuple
     int j, t;
     String ret;
     byte tchar;
-    if (isString(source)) {
-      consumeString(source, tk);
+    consumeString(source, tk);
+    if (isString(tk.token))
       return;
-    }
     j = 0;
     ret = "";
     for (int i = 0; i < source.length(); i++) {
       tchar = source.charAt(i);
-      if (tchar == '(' || tchar == ')' || tchar == ',' || tchar == ':') {
+      if (tchar == '(' || tchar == ')' || tchar == ',' || tchar == ':' || tchar == '"') {
         if (i + 1 >= source.length()) {
           t = source.length();
         } else {
@@ -212,7 +168,7 @@ public abstract class TagTuple
       }
     }
     tk.nextTChar = '\0';
-    tk.remaining = new BytesString();
+    tk.remaining = source.substring(source.length());
   }
 
   private static void parseString(String exprTag, String r, char s, BytesString source, Parsed tt)
@@ -240,8 +196,11 @@ public abstract class TagTuple
         return;
       }
     }
-    if (tk.token != null && tk.token.length() > 0 && (tk.nextTChar == ')' || tk.nextTChar == ',')) {
-      tk.result = new Value(exprTag, tk.token);
+    if (tk.nextTChar == ')' || tk.nextTChar == ',' || tk.nextTChar == '\0') {
+      if (tk.token != null && tk.token.length() > 0)
+        tk.result = new Value(exprTag, tk.token);
+      else
+        tk.result = null;
     } else if (tk.nextTChar == '(') {
       tuple = new Tuple(exprTag, tk.token, new Vector<TagTuple>());
       while (tk.nextTChar != ')') {
@@ -259,7 +218,7 @@ public abstract class TagTuple
       tk.result = tuple;
       consumeWhiteSpace(0, tk.remaining, tk);
     } else {
-      tk.result = null;
+      throw new Exception("Unexpected symbol " + (char) tk.nextTChar);
     }
   }
 
