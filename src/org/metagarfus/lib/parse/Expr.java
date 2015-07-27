@@ -5,7 +5,7 @@ package org.metagarfus.lib.parse;
  */
 public class Expr
 {
-  public static final byte PLUS = '+';
+  /*public static final byte PLUS = '+';
   public static final byte MINUS = '-';
   public static final byte MUL = '*';
   public static final byte DIV = '/';
@@ -38,15 +38,22 @@ public class Expr
     public Object opaque;
   }
 
+  public static boolean isReserved(byte b)
+  {
+    for (byte b2 : reserved) {
+      if (b == b2)
+        return true;
+    }
+    return false;
+  }
+
   public static boolean containsReservedCharacters(String str)
   {
     byte[] array;
     array = str.getBytes();
     for (byte b : array) {
-      for (byte b2 : reserved) {
-        if (b == b2)
-          return true;
-      }
+      if (isReserved(b))
+        return true;
     }
     return false;
   }
@@ -54,5 +61,5 @@ public class Expr
   public Expr parse(String str)
   {
     return null;
-  }
+  }*/
 }

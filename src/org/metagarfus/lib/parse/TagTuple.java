@@ -58,11 +58,6 @@ public abstract class TagTuple
     }
   }
 
-  private static boolean isString(BytesString str)
-  {
-    return str.length() >= 1 && str.charAt(0) == '"';
-  }
-
   private static boolean isString(String str)
   {
     return str != null && str.length() >= 1 && str.charAt(0) == '"';
